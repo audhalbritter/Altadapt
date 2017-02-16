@@ -55,8 +55,8 @@ get.slopes <- function(dd, meta){
   })
   result2 <- t(sapply(result, I))
   colnames(result2) <- c("slopes", "slopes2", "slopes.elev", "slopes.elev2", "sample.size", "p.slope", "p.slope2", "p.slope.elev", "p.slope.elev2", "cor.elev.bio_1")
-  meta[,39:48] <- result2[,1:10]
-  colnames(meta)[39:48] <- c("slopes", "slopes2", "slopes.elev", "slopes.elev2", "sample.size", "p.slope", "p.slope2", "p.slope.elev", "p.slope.elev2", "cor.elev.bio_1")
+  meta[,40:49] <- result2[,1:10]
+  colnames(meta)[40:49] <- c("slopes", "slopes2", "slopes.elev", "slopes.elev2", "sample.size", "p.slope", "p.slope2", "p.slope.elev", "p.slope.elev2", "cor.elev.bio_1")
   return(meta)
 }
 #meta2 <- get.slopes(DAT.T, meta.studyunit)
