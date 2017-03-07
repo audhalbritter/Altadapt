@@ -15,13 +15,14 @@ get.means <- function (dd){
     mean.long.pop <- mean(x$long.pop)
     mean.temp.pop <- mean(x$bio_1)
     r.temp.pop <- max(x$bio_1)-min(x$bio_1)
+    mean.seasonality <- mean(x$bio_4)
     distance.dd <- max(dist(cbind(x$lat.pop, x$long.pop)))
     distance.km <- max(distm(cbind(x$long.pop, x$lat.pop), fun=distHaversine), na.rm=TRUE)/1000
     mean.distance.km <- mean(distm(cbind(x$long.pop, x$lat.pop), fun=distHaversine), na.rm=TRUE)/1000
-    cbind(mean.elev.pop, r.elev.pop, mean.lat.pop, mean.long.pop, mean.temp.pop, r.temp.pop, distance.dd, distance.km, mean.distance.km)
+    cbind(mean.elev.pop, r.elev.pop, mean.lat.pop, mean.long.pop, mean.temp.pop, r.temp.pop, mean.seasonality, distance.dd, distance.km, mean.distance.km)
   })
   new.means2<-t(sapply(new.means,I))
-  colnames(new.means2) <- c("mean.elev", "r.elev", "mean.lat", "mean.long", "mean.temp", "r.temp", "dist.dd", "dist.km", "mean.dist.km")
+  colnames(new.means2) <- c("mean.elev", "r.elev", "mean.lat", "mean.long", "mean.temp", "r.temp", "mean.seasonality", "dist.dd", "dist.km", "mean.dist.km")
   return(new.means2)
 }
 #ddd <- get.means(DAT.T)
@@ -29,7 +30,7 @@ get.means <- function (dd){
 
 # CALCULATE SLOPES
 ## standardise trait values within studyunits to mean 0 sd 1 and extract regression coefs of trait on mean temperature (bio_1)
-get.slopes <- function(dd, meta){
+get.slopes <- function(dd){
   result <- by(dd, dd$studyunit, function(x){
     standardized.traitmean <- (x$traitmean - mean(x$traitmean, na.rm=TRUE))/sd(x$traitmean, na.rm=TRUE)
     
@@ -38,6 +39,9 @@ get.slopes <- function(dd, meta){
     slopes2 <- tryCatch(as.numeric(coef(lm(standardized.traitmean ~ bio_1+I(bio_1^2), x))[2]), error=function(e)NA)
     slopes.elev <- tryCatch(as.numeric(coef(lm(standardized.traitmean ~ elev, x))[2]), error=function(e)NA)
     slopes.elev2 <- tryCatch(as.numeric(coef(lm(standardized.traitmean ~ elev+I(elev^2), x))[2]), error=function(e)NA)
+    
+    # Variation
+    variation <- tryCatch(as.numeric(coef(summary(lm(standardized.traitmean ~ bio_1, x)))[,"Std. Error"][2]), error=function(e)NA)
     
     # get sample size
     sample.size <- tryCatch((length(resid(lm(standardized.traitmean~bio_1,x)))), error=function(e) NA)
@@ -51,15 +55,13 @@ get.slopes <- function(dd, meta){
     # calculate correlation between elev and MAT
     cor.elev.bio_1 <- tryCatch(cor(x$elev, x$bio_1), error=function(e) NA)
     
-    cbind(slopes, slopes2, slopes.elev, slopes.elev2, sample.size, p.slope, p.slope2, p.slope.elev, p.slope.elev2, cor.elev.bio_1)
+    cbind(slopes, slopes2, slopes.elev, slopes.elev2, variation, sample.size, p.slope, p.slope2, p.slope.elev, p.slope.elev2, cor.elev.bio_1)
   })
   result2 <- t(sapply(result, I))
-  colnames(result2) <- c("slopes", "slopes2", "slopes.elev", "slopes.elev2", "sample.size", "p.slope", "p.slope2", "p.slope.elev", "p.slope.elev2", "cor.elev.bio_1")
-  meta[,40:49] <- result2[,1:10]
-  colnames(meta)[40:49] <- c("slopes", "slopes2", "slopes.elev", "slopes.elev2", "sample.size", "p.slope", "p.slope2", "p.slope.elev", "p.slope.elev2", "cor.elev.bio_1")
-  return(meta)
+  colnames(result2) <- c("slopes", "slopes2", "slopes.elev", "slopes.elev2", "variation", "sample.size", "p.slope", "p.slope2", "p.slope.elev", "p.slope.elev2", "cor.elev.bio_1")
+  return(result2)
 }
-#meta2 <- get.slopes(DAT.T, meta.studyunit)
+
 
 
 
@@ -170,4 +172,44 @@ multiplot <- function(..., plotlist=NULL, file, cols=1, layout=NULL) {
                                       layout.pos.col = matchidx$col))
     }
   }
+}
+
+
+### Calculate collinearity (Variance inflation factor)
+vif.mer <- function (fit) {
+  ## adapted from rms::vif
+  v <- vcov(fit)
+  nam <- names(fixef(fit))
+  ## exclude intercepts
+  ns <- sum(1 * (nam == "Intercept" | nam == "(Intercept)"))
+  if (ns > 0) {
+    v <- v[-(1:ns), -(1:ns), drop = FALSE]
+    nam <- nam[-(1:ns)]
+  }
+  d <- diag(v)^0.5
+  v <- diag(solve(v/(d %o% d)))
+  names(v) <- nam
+  v
+}
+
+
+
+
+# Function for model selection and averageing mixed effects models
+# Input: full model
+# printTable = TRUE: prints dredge table
+# threshold in percent the cumulative sum that should be used for the model averaging
+ModelAverage <- function(mod, printTable, percent.thresh){
+  model.set <- dredge(mod)
+  if(printTable == TRUE){
+    print(model.set)
+  }
+  averaged.model <- model.avg(model.set, cumsum(weight) <= percent.thresh)
+  res <- data.frame(summary(averaged.model)$coefmat.full)
+  res2 <- res %>% 
+    rownames_to_column(var = "Variable") %>% 
+    setNames(., c("Variable", "Estimate", "StError", "AdjSE", "ZValue", "Pvalue")) %>% 
+    mutate(CI.low = Estimate - 1.96 * StError) %>% 
+    mutate(CI.high = Estimate + 1.96 * StError)
+  return(res2)
 }
