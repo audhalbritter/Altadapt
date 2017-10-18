@@ -19,8 +19,34 @@ vignettes/*.pdf
 .httr-oauth
 .Rproj.user
 
+#markdown cache
+*_cache/
+
 #data
 *.xls
-*.xlsx
 *.csv
+*.Rdata
+*.odb
+*.zip
+*.sql
+*.xlsx
+*.xlsx#
+*.rar
+*.sqlite
+*.dat
+*.RData.Tmp1
+# exceptions for files
+# !globalCorrections.csv 
+
+#rasters & shapefiles
+*.bil
+*.blw
+*.hdr
+*.prj
+
+#figures & output
+*.png
+*.html
 *.pdf
+*.jpeg
+.my.cnf
