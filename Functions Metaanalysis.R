@@ -27,12 +27,53 @@ get.means <- function (dd){
 }
 #ddd <- get.means(DAT.T)
 
+get.means2 <- function(dd){
+  res <- dd %>% 
+    group_by(studyunit) %>% 
+    mutate(mean.elev = mean(elev)) %>% 
+    mutate(r.elev = max(elev) - min(elev)) %>%
+    mutate(mean.lat = mean(lat.pop)) %>%
+    mutate(mean.long = mean(long.pop)) %>%
+    mutate(mean.temp = mean(bio_1)) %>%
+    mutate(r.temp = max(bio_1) - min(bio_1)) %>% 
+    mutate(mean.seasonality = mean(bio_4)) %>% 
+    # fix these
+    distance.dd <- max(dist(cbind(x$lat.pop, x$long.pop)))
+    distance.km <- max(distm(cbind(x$long.pop, x$lat.pop), fun=distHaversine), na.rm=TRUE)/1000
+    mean.distance.km <- mean(distm(cbind(x$long.pop, x$lat.pop), fun=distHaversine), na.rm=TRUE)/1000
+
+  return(res)
+}
+
+
 
 # CALCULATE SLOPES
 ## standardise trait values within studyunits to mean 0 sd 1 and extract regression coefs of trait on mean temperature (bio_1)
+get.slopes2 <- function(dd){
+  dd <- dd %>% 
+    group_by(studyunit) %>% 
+    filter(!is.na(traitmean), !is.na(bio_1)) %>%
+    mutate(n = n()) %>% 
+    filter(n > 2) %>% 
+    mutate(std.traitmean = scale(traitmean)) %>% 
+    group_by(n, add = TRUE) %>% # add n for sample size
+    do({
+      # fit model
+      fit <- lm(std.traitmean ~ bio_1, data = .)
+      
+      # extract coefficients
+      res <- tidy(fit) %>% 
+        filter(term == "bio_1") %>% 
+        select(-term, -std.error, -statistic)
+  })
+  return(dd)
+}
+ 
+
+ 
 get.slopes <- function(dd){
   result <- by(dd, dd$studyunit, function(x){
-    standardized.traitmean <- (x$traitmean - mean(x$traitmean, na.rm=TRUE))/sd(x$traitmean, na.rm=TRUE)
+    standardized.traitmean <- (x$traitmean - mean(x$traitmean, na.rm=TRUE))/sd(x$traitmean, na.rm=TRUE) #scale(traitmean)
     
     # get slopes for bio_1, bio_1^2 and elev
     slopes <- tryCatch(as.numeric(coef(lm(standardized.traitmean ~ bio_1, x))[2]), error=function(e)NA)
@@ -40,8 +81,8 @@ get.slopes <- function(dd){
     slopes.elev <- tryCatch(as.numeric(coef(lm(standardized.traitmean ~ elev, x))[2]), error=function(e)NA)
     slopes.elev2 <- tryCatch(as.numeric(coef(lm(standardized.traitmean ~ elev+I(elev^2), x))[2]), error=function(e)NA)
     
-    # Variation
-    variation <- tryCatch(as.numeric(coef(summary(lm(standardized.traitmean ~ bio_1, x)))[,"Std. Error"][2]), error=function(e)NA)
+    # Pearson Correlation Coeff
+    correlation <- cor(standardized.traitmean, bio_1, method = c("pearson"))
     
     # get sample size
     sample.size <- tryCatch((length(resid(lm(standardized.traitmean~bio_1,x)))), error=function(e) NA)
@@ -55,10 +96,10 @@ get.slopes <- function(dd){
     # calculate correlation between elev and MAT
     cor.elev.bio_1 <- tryCatch(cor(x$elev, x$bio_1), error=function(e) NA)
     
-    cbind(slopes, slopes2, slopes.elev, slopes.elev2, variation, sample.size, p.slope, p.slope2, p.slope.elev, p.slope.elev2, cor.elev.bio_1)
+    cbind(correlation, slopes, slopes2, slopes.elev, slopes.elev2, sample.size, p.slope, p.slope2, p.slope.elev, p.slope.elev2, cor.elev.bio_1)
   })
   result2 <- t(sapply(result, I))
-  colnames(result2) <- c("slopes", "slopes2", "slopes.elev", "slopes.elev2", "variation", "sample.size", "p.slope", "p.slope2", "p.slope.elev", "p.slope.elev2", "cor.elev.bio_1")
+  colnames(result2) <- c("correlation", "slopes", "slopes2", "slopes.elev", "slopes.elev2", "sample.size", "p.slope", "p.slope2", "p.slope.elev", "p.slope.elev2", "cor.elev.bio_1")
   return(result2)
 }
 
@@ -199,17 +240,115 @@ vif.mer <- function (fit) {
 # Input: full model
 # printTable = TRUE: prints dredge table
 # threshold in percent the cumulative sum that should be used for the model averaging
-ModelAverage <- function(mod, printTable, percent.thresh){
-  model.set <- dredge(mod)
-  if(printTable == TRUE){
+ModelAverage <- function(mod, printFullTable, print95Table, percent.thresh){
+  model.set <- dredge(mod, fixed = "r.temp", rank = "AICc")
+  mm <- data.frame(model.set)
+  mm$cumsum <- cumsum(mm$weight)
+  mm95 <- mm %>% filter(cumsum < percent.thresh)
+  if(printFullTable == TRUE){
     print(model.set)
+  }
+  if(print95Table == TRUE){
+    print(mm95)
   }
   averaged.model <- model.avg(model.set, cumsum(weight) <= percent.thresh)
   res <- data.frame(summary(averaged.model)$coefmat.full)
+  
+  # Importance
+  imp <- data.frame(importance(averaged.model))
+  imp <- imp %>%
+    rownames_to_column(var = "Category") %>% 
+    setNames(., c("Category", "Importance")) %>%
+    mutate(Category = plyr::mapvalues(Category, c("r.temp", "mean.temp", "mean.seasonality", "dist.km", "growthform", "intro", "breed"), c("T Range", "Mean T", "T Seasonality", "Distance", "Growthform", "Introduction Status", "Breeding System"))) %>% 
+    mutate(Importance = round(Importance, 2))
+  
   res2 <- res %>% 
     rownames_to_column(var = "Variable") %>% 
-    setNames(., c("Variable", "Estimate", "StError", "AdjSE", "ZValue", "Pvalue")) %>% 
+    setNames(., c("Variable", "Estimate", "StError", "AdjSE", "Zvalue", "Pvalue")) %>% 
+    select(-AdjSE) %>% 
+    mutate(Category = Variable) %>% 
+    mutate(Category = plyr::mapvalues(Category, c("r.temp", "mean.temp", "mean.seasonality", "dist.km", "growthformgrass", "growthformtree", "intronative", "breedmixed_mating", "breedoutcrossing"), c("T Range", "Mean T", "T Seasonality", "Distance", "Growthform", "Growthform", "Introduction Status", "Breeding System", "Breeding System"))) %>% 
+    mutate(Variable = plyr::mapvalues(Variable, c("r.temp", "mean.temp", "mean.seasonality", "dist.km", "growthformgrass", "growthformtree", "intronative", "breedmixed_mating", "breedoutcrossing"), c("T Range", "Mean T", "T Seasonality", "Distance", "Grass", "Tree", "Native", "Mixed Mating", "Outcrossing"))) %>% 
     mutate(CI.low = Estimate - 1.96 * StError) %>% 
-    mutate(CI.high = Estimate + 1.96 * StError)
+    mutate(CI.high = Estimate + 1.96 * StError) %>% 
+    mutate(Estimate = round(Estimate, 2), CI.low = round(CI.low, 2), CI.high = round(CI.high, 2), Zvalue = round(Zvalue, 2), Pvalue = round(Pvalue, 3)) %>% 
+    mutate(CI = paste(CI.low, CI.high, sep = " - ")) %>% 
+    select(Category, Variable, Estimate, CI, Zvalue, Pvalue) %>% 
+    #filter(!Variable == "(Intercept)") %>% # remove intercept
+    # add importance for ranking
+    left_join(imp, by = "Category") %>% 
+    mutate(Variable = factor(Variable, levels = Variable))
   return(res2)
+}
+
+
+# Function to print 95 cumulative selection table
+# Input: full model
+# threshold in percent the cumulative sum that should be used for the model averaging
+ModelSelectionTable <- function(mod, percent.thresh){
+  model.set <- dredge(mod, fixed = "r.temp", rank = "AICc")
+  mm <- data.frame(model.set)
+  mm$cumsum <- cumsum(mm$weight)
+  res2 <- mm %>% 
+    filter(cumsum < percent.thresh) %>% 
+    mutate(breed = ifelse(!is.na(breed), "BS", "")) %>% 
+    mutate(growthform = ifelse(!is.na(growthform), "GF", "")) %>% 
+    mutate(intro = ifelse(!is.na(intro), "IS", "")) %>% 
+    mutate(mean.seasonality = ifelse(!is.na(mean.seasonality), "MS", "")) %>% 
+    mutate(mean.temp = ifelse(!is.na(mean.temp), "MT", "")) %>% 
+    mutate(Model = paste(breed, growthform, intro, mean.seasonality, mean.temp, sep = "+")) %>% 
+    mutate(delta = round(delta, 2), weight = round(weight, 3)) %>% 
+    select(Model, df, delta, weight) %>% 
+    mutate(Model = gsub("^\\+*|\\+*$", "", Model)) %>% # removes + at start and end
+    mutate(Model = gsub("\\+{2,}", "+", Model)) # removes 2-x + and replace by +; does not touch +
+  return(res2)
+}
+
+
+
+# Function for plotting output from ModelAverage
+# Input: output form ModelAverage
+PlotEstimates <- function(dat){
+  dat %>% 
+    filter(!Variable == "(Intercept)") %>%# remove intercept
+    ggplot(aes(x = Variable, y = Estimate, ymin = CI.low, ymax = CI.high)) + 
+    geom_point() +
+    labs(x = "") +
+    geom_hline(yintercept = 0, color = "grey") +
+    geom_errorbar(width=0.25) + 
+    theme(axis.text.x = element_text(angle = 45, hjust = 1))
+}
+
+
+
+PlotEstimates3 <- function(mod, percent.thresh){
+  model.set <- dredge(mod, fixed = "r.temp", rank = "AICc")
+  mm <- data.frame(model.set)
+  mm$cumsum <- cumsum(mm$weight)
+  mm95 <- mm %>% filter(cumsum < percent.thresh)
+
+  averaged.model <- model.avg(model.set, cumsum(weight) <= percent.thresh)
+  res <- data.frame(summary(averaged.model)$coefmat.full)
+  
+  res2 <- res %>% 
+    rownames_to_column(var = "Variable") %>% 
+    setNames(., c("Variable", "Estimate", "StError", "AdjSE", "Zvalue", "Pvalue")) %>% 
+    select(-AdjSE) %>% 
+    mutate(Category = Variable) %>% 
+    mutate(Category = plyr::mapvalues(Category, c("r.temp", "mean.temp", "mean.seasonality", "dist.km", "growthformgrass", "growthformtree", "intronative", "breedmixed_mating", "breedoutcrossing"), c("T Range", "Mean T", "T Seasonality", "Distance", "Growthform", "Growthform", "Introduction Status", "Breeding System", "Breeding System"))) %>% 
+    mutate(Variable = plyr::mapvalues(Variable, c("r.temp", "mean.temp", "mean.seasonality", "dist.km", "growthformgrass", "growthformtree", "intronative", "breedmixed_mating", "breedoutcrossing"), c("T Range", "Mean T", "T Seasonality", "Distance", "Grass", "Tree", "Native", "Mixed Mating", "Outcrossing"))) %>% 
+    mutate(CI.low = Estimate - 1.96 * StError) %>% 
+    mutate(CI.high = Estimate + 1.96 * StError) %>% 
+    mutate(Estimate = round(Estimate, 2), CI.low = round(CI.low, 2), CI.high = round(CI.high, 2), Zvalue = round(Zvalue, 2), Pvalue = round(Pvalue, 3)) %>% 
+    select(Category, Variable, Estimate, CI.low, CI.high) %>% 
+    filter(!Variable == "(Intercept)") %>% # remove intercept
+    mutate(Variable = factor(Variable, levels = c("Mean T", "T Seasonalyit", "Distance", "Native", "Grass", "Tree", "Mixed Mating", "Outcrossing")))
+  
+  res2 %>% 
+    filter(!Variable == "T Range") %>% 
+    ggplot(aes(y = Variable, x = Estimate, xmin = CI.low, xmax = CI.high)) + 
+    geom_point() +
+    labs(x = "Parameter estimate", y = "") +
+    geom_vline(xintercept = 0, color = "grey", linetype = "dashed") +
+    geom_errorbarh(height = 0) 
 }
