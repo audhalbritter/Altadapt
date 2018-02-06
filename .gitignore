@@ -49,5 +49,6 @@ vignettes/*.pdf
 *.png
 *.html
 *.pdf
+*.jpg
 *.jpeg
 .my.cnf
