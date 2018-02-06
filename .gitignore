@@ -52,3 +52,11 @@ vignettes/*.pdf
 *.jpg
 *.jpeg
 .my.cnf
+
+
+# exclude folders
+**/Old code
+**/Preliminary Analysis
+**/Analysis several models
+**/Figures
+**/General information
