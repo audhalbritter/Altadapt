@@ -76,12 +76,12 @@ dat2 <- dat2 %>%
   # Exclude data studies from Rehfeld, where coords are only extracted for some regions
   filter(Coord != "extracted_rough_2") %>% 
   # delete Studies without a slope
-  filter(!is.na(estimate))
+  filter(!is.na(estimate)) %>% 
 head(dat2)
 length(unique(dat2$StudyID)) # 70
 
 
-save(dat2, file = "dat2.Rdata")
+#save(dat2, file = "dat2.Rdata")
 
 
 # subsetting data for height, biomass and phenology, create a variable var
@@ -95,7 +95,7 @@ dat4 <- dat2 %>%
   mutate(abs.lat = abs(mean.lat))
 head(dat4)
 
-save(dat4, file = "dat4.Rdata")
+#save(dat4, file = "dat4.Rdata")
 
 # Excluding climate chamber and greenhouse experiments
 noGarden <- dat4 %>% filter(studysite == "Garden")
