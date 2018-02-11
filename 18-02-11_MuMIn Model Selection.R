@@ -27,7 +27,6 @@ hist(log(hh$slopes))
 #res <- dredge(modAbsHeight, fixed = "r.temp", rank = "AICc", extra = "R^2")
 #res <- dredge(modAbsHeight, fixed = "r.temp", rank = "AICc")
 
-
 # UNTRANSFORMED SLOPES
 # Define Model
 modHeight_UT <- lmer(slopes ~ r.temp + abs.lat + dist.km + breed + growthform + intro + (1|species)+(1|StudyID)+(1|Year), data = hh, REML = FALSE, weights = sample.size, na.action = "na.fail")
@@ -351,6 +350,7 @@ ResultEstimate <- ResHeight_UT %>%
   arrange(Trait, Variable) %>% 
   mutate(CI = paste("(", CI, ")", sep = ""))
 
+write_csv(ResultEstimate, path = "FinalResults/ResultEstimate.csv", col_names = TRUE)
 
 # Additional tests
 ResHeight.ww %>% 
@@ -368,13 +368,15 @@ ResHeight.ww %>%
 
 
 #######################################################
-#### MODEL TABLE 2 ####
+#### MODEL TABLE S4 ####
 #######################################################
 
 ResModelSelection <- ResH_UT %>% 
   bind_rows(ResH_ABS, ResB_UT, ResB_ABS, ResP_UT, ResP_ABS) %>% 
   select(Trait, Model, df, delta, R.square, weight)
   
+write_csv(ResModelSelection, path = "FinalResults/ResModelSelection.csv", col_names = TRUE)
+
 # count models
 ResModelSelection %>%   
   group_by(Trait) %>% 
@@ -469,6 +471,7 @@ Fig2EffectSizePlot <- dat4 %>%
   mutate(Trait = factor(Trait, level = c("Height", "Biomass", "Phenology"))) %>%
   mutate(Pvalue = ifelse(Pvalue < 0.05, "sign.", "non sign.")) %>% 
   gather(key = Slope, value = Value, -Trait, -Pvalue) %>% 
+  mutate(Slope = factor(Slope, levels = c("Untransformed slope", "Absolute slope"))) %>% 
   ggplot(aes(x = Trait, y = Value)) + 
   geom_violin(draw_quantiles = c(0.5), position = position_dodge(width = 0.60), fill = "grey80") +
   geom_hline(yintercept = 0, color = "grey") +
