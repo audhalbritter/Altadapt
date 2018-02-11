@@ -26,6 +26,7 @@ d1 <- dat5 %>% filter(var == "height") %>% filter(!is.na(breed))
 yylim <- range(d1$slopes)
 
 SlopePlot <- ggplot(d1, aes(x = r.temp, y = abs.slopes)) +
+  stat_smooth(method = "lm", formula = y ~ x + I(x^2), se = FALSE, color = "black", linetype = "dashed", size = 0.7) +
   geom_point(aes(size = sample.size, colour = Pvalue, shape = Pvalue, alpha = Pvalue)) + 
   ylim(-0.2, yylim[2]) +
   scale_colour_manual(values = c("grey50","grey80", "black")) +
