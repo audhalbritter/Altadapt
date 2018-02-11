@@ -259,7 +259,7 @@ ModelAverage <- function(mod, printFullTable, print95Table, percent.thresh){
   imp <- imp %>%
     rownames_to_column(var = "Category") %>% 
     setNames(., c("Category", "Importance")) %>%
-    mutate(Category = plyr::mapvalues(Category, c("r.temp", "mean.temp", "mean.seasonality", "dist.km", "growthform", "intro", "breed"), c("T Range", "Mean T", "T Seasonality", "Distance", "Growthform", "Introduction Status", "Breeding System"))) %>% 
+    mutate(Category = plyr::mapvalues(Category, c("r.temp", "abs.lat", "mean.temp", "mean.seasonality", "dist.km", "growthform", "intro", "breed"), c("T Range", "Abs. Latitude", "Mean T", "T Seasonality", "Distance", "Growthform", "Introduction Status", "Breeding System"))) %>% 
     mutate(Importance = round(Importance, 2))
   
   res2 <- res %>% 
@@ -267,8 +267,8 @@ ModelAverage <- function(mod, printFullTable, print95Table, percent.thresh){
     setNames(., c("Variable", "Estimate", "StError", "AdjSE", "Zvalue", "Pvalue")) %>% 
     select(-AdjSE) %>% 
     mutate(Category = Variable) %>% 
-    mutate(Category = plyr::mapvalues(Category, c("r.temp", "mean.temp", "mean.seasonality", "dist.km", "growthformgrass", "growthformtree", "intronative", "breedmixed_mating", "breedoutcrossing"), c("T Range", "Mean T", "T Seasonality", "Distance", "Growthform", "Growthform", "Introduction Status", "Breeding System", "Breeding System"))) %>% 
-    mutate(Variable = plyr::mapvalues(Variable, c("r.temp", "mean.temp", "mean.seasonality", "dist.km", "growthformgrass", "growthformtree", "intronative", "breedmixed_mating", "breedoutcrossing"), c("T Range", "Mean T", "T Seasonality", "Distance", "Grass", "Tree", "Native", "Mixed Mating", "Outcrossing"))) %>% 
+    mutate(Category = plyr::mapvalues(Category, c("r.temp", "abs.lat", "mean.temp", "mean.seasonality", "dist.km", "growthformgrass", "growthformtree", "intronative", "breedmixed_mating", "breedoutcrossing"), c("T Range", "Abs. Latitude", "Mean T", "T Seasonality", "Distance", "Growthform", "Growthform", "Introduction Status", "Breeding System", "Breeding System"))) %>% 
+    mutate(Variable = plyr::mapvalues(Variable, c("r.temp", "abs.lat", "mean.temp", "mean.seasonality", "dist.km", "growthformgrass", "growthformtree", "intronative", "breedmixed_mating", "breedoutcrossing"), c("T Range", "Abs. Latitude", "Mean T", "T Seasonality", "Distance", "Grass", "Tree", "Native", "Mixed Mating", "Outcrossing"))) %>% 
     mutate(CI.low = Estimate - 1.96 * StError) %>% 
     mutate(CI.high = Estimate + 1.96 * StError) %>% 
     mutate(Estimate = round(Estimate, 2), CI.low = round(CI.low, 2), CI.high = round(CI.high, 2), Zvalue = round(Zvalue, 2), Pvalue = round(Pvalue, 3)) %>% 
@@ -282,11 +282,12 @@ ModelAverage <- function(mod, printFullTable, print95Table, percent.thresh){
 }
 
 
+
 # Function to print 95 cumulative selection table
 # Input: full model
 # threshold in percent the cumulative sum that should be used for the model averaging
-ModelSelectionTable <- function(mod, percent.thresh){
-  model.set <- dredge(mod, fixed = "r.temp", rank = "AICc")
+ModelSelectionTable <- function(mod, percent.thresh, trait){
+  model.set <- dredge(mod, fixed = "r.temp", rank = "AICc", extra = "R^2")
   mm <- data.frame(model.set)
   mm$cumsum <- cumsum(mm$weight)
   res2 <- mm %>% 
@@ -294,13 +295,14 @@ ModelSelectionTable <- function(mod, percent.thresh){
     mutate(breed = ifelse(!is.na(breed), "BS", "")) %>% 
     mutate(growthform = ifelse(!is.na(growthform), "GF", "")) %>% 
     mutate(intro = ifelse(!is.na(intro), "IS", "")) %>% 
-    mutate(mean.seasonality = ifelse(!is.na(mean.seasonality), "MS", "")) %>% 
-    mutate(mean.temp = ifelse(!is.na(mean.temp), "MT", "")) %>% 
-    mutate(Model = paste(breed, growthform, intro, mean.seasonality, mean.temp, sep = "+")) %>% 
-    mutate(delta = round(delta, 2), weight = round(weight, 3)) %>% 
-    select(Model, df, delta, weight) %>% 
+    mutate(abs.lat = ifelse(!is.na(abs.lat), "AL", "")) %>%
+    mutate(dist.km = ifelse(!is.na(dist.km), "DI", "")) %>% 
+    mutate(Model = paste(breed, growthform, intro, abs.lat, dist.km, sep = "+")) %>% 
+    mutate(delta = round(delta, 2), weight = round(weight, 3), R.square = round(R.2, 3)) %>% 
+    select(Model, df, delta, weight, R.square) %>% 
     mutate(Model = gsub("^\\+*|\\+*$", "", Model)) %>% # removes + at start and end
-    mutate(Model = gsub("\\+{2,}", "+", Model)) # removes 2-x + and replace by +; does not touch +
+    mutate(Model = gsub("\\+{2,}", "+", Model)) %>%  # removes 2-x + and replace by +; does not touch +
+    mutate(Trait = trait)
   return(res2)
 }
 
@@ -335,20 +337,20 @@ PlotEstimates3 <- function(mod, percent.thresh){
     setNames(., c("Variable", "Estimate", "StError", "AdjSE", "Zvalue", "Pvalue")) %>% 
     select(-AdjSE) %>% 
     mutate(Category = Variable) %>% 
-    mutate(Category = plyr::mapvalues(Category, c("r.temp", "mean.temp", "mean.seasonality", "dist.km", "growthformgrass", "growthformtree", "intronative", "breedmixed_mating", "breedoutcrossing"), c("T Range", "Mean T", "T Seasonality", "Distance", "Growthform", "Growthform", "Introduction Status", "Breeding System", "Breeding System"))) %>% 
-    mutate(Variable = plyr::mapvalues(Variable, c("r.temp", "mean.temp", "mean.seasonality", "dist.km", "growthformgrass", "growthformtree", "intronative", "breedmixed_mating", "breedoutcrossing"), c("T Range", "Mean T", "T Seasonality", "Distance", "Grass", "Tree", "Native", "Mixed Mating", "Outcrossing"))) %>% 
+    mutate(Category = plyr::mapvalues(Category, c("abs.lat", "r.temp", "mean.temp", "mean.seasonality", "dist.km", "growthformgrass", "growthformtree", "intronative", "breedmixed_mating", "breedoutcrossing"), c("Abs. Latitude", "T Range", "Mean T", "T Seasonality", "Distance", "Growthform", "Growthform", "Introduction Status", "Breeding System", "Breeding System"))) %>% 
+    mutate(Variable = plyr::mapvalues(Variable, c("abs.lat", "r.temp", "mean.temp", "mean.seasonality", "dist.km", "growthformgrass", "growthformtree", "intronative", "breedmixed_mating", "breedoutcrossing"), c("Abs. Latitude", "T Range", "Mean T", "T Seasonality", "Distance", "Grass", "Tree", "Native", "Mixed Mating", "Outcrossing"))) %>% 
     mutate(CI.low = Estimate - 1.96 * StError) %>% 
     mutate(CI.high = Estimate + 1.96 * StError) %>% 
     mutate(Estimate = round(Estimate, 2), CI.low = round(CI.low, 2), CI.high = round(CI.high, 2), Zvalue = round(Zvalue, 2), Pvalue = round(Pvalue, 3)) %>% 
     select(Category, Variable, Estimate, CI.low, CI.high) %>% 
     filter(!Variable == "(Intercept)") %>% # remove intercept
-    mutate(Variable = factor(Variable, levels = c("Mean T", "T Seasonalyit", "Distance", "Native", "Grass", "Tree", "Mixed Mating", "Outcrossing")))
+    mutate(Variable = factor(Variable, levels = c("Abs. Latitude", "Mean T", "T Seasonalyit", "Distance", "Native", "Grass", "Tree", "Mixed Mating", "Outcrossing")))
   
   res2 %>% 
     filter(!Variable == "T Range") %>% 
     ggplot(aes(y = Variable, x = Estimate, xmin = CI.low, xmax = CI.high)) + 
+    geom_vline(xintercept = 0, color = "grey", linetype = "dashed") +
     geom_point() +
     labs(x = "Parameter estimate", y = "") +
-    geom_vline(xintercept = 0, color = "grey", linetype = "dashed") +
     geom_errorbarh(height = 0) 
 }
