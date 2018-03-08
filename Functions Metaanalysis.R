@@ -240,8 +240,8 @@ vif.mer <- function (fit) {
 # Input: full model
 # printTable = TRUE: prints dredge table
 # threshold in percent the cumulative sum that should be used for the model averaging
-ModelAverage <- function(mod, printFullTable, print95Table, percent.thresh){
-  model.set <- dredge(mod, fixed = "r.temp", rank = "AICc")
+ModelAverage <- function(mod, printFullTable, print95Table, percent.thresh, trait){
+  model.set <- dredge(mod, fixed = "r.temp", rank = "AICc", extra = "R^2")
   mm <- data.frame(model.set)
   mm$cumsum <- cumsum(mm$weight)
   mm95 <- mm %>% filter(cumsum < percent.thresh)
@@ -277,7 +277,8 @@ ModelAverage <- function(mod, printFullTable, print95Table, percent.thresh){
     #filter(!Variable == "(Intercept)") %>% # remove intercept
     # add importance for ranking
     left_join(imp, by = "Category") %>% 
-    mutate(Variable = factor(Variable, levels = Variable))
+    mutate(Variable = factor(Variable, levels = Variable)) %>% 
+    mutate(Trait = trait)
   return(res2)
 }
 
