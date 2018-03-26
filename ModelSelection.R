@@ -211,30 +211,6 @@ ResModelSelection %>%
 
 
 
-
-#######################################################
-#### PLOT IMPORTANCE ####
-#######################################################
-
-# ROW_BIND PARAMETER TABLE
-ImportancePlot <- ResHeight %>% 
-  bind_rows(ResBiomass, ResPhenologyEmergence) %>% 
-  filter(Variable != "(Intercept)") %>% 
-  mutate(Trait = c(rep("Height", 9), rep("Biomass", 9), rep("Phenology", 9))) %>% 
-  mutate(Trait = factor(Trait, level = c("Height", "Biomass", "Phenology"))) %>% 
-  group_by(Trait, Category) %>% 
-  summarise(Importance = mean(Importance)) %>% 
-  mutate(Category = factor(Category, level = c("T Range", "Mean T", "T Seasonality", "dist.km", "Breeding System", "Growthform", "Introduction Status"))) %>%
-  arrange(Trait, -Importance) %>% 
-  ggplot(aes(x = Category, y = Importance, fill = Trait)) +
-  geom_bar(stat = "identity", position = "dodge")
-ImportancePlot
-ggsave("Fig3ImportancePlot.pdf", ImportancePlot)
-
-
-
-
-
 #######################################################
 #### PLOT ESTIMATE ####
 #######################################################
@@ -242,7 +218,6 @@ ggsave("Fig3ImportancePlot.pdf", ImportancePlot)
 
 ParameterEstimate <- ResHeight_UT %>% 
   bind_rows(ResHeight_ABS, ResBiomass_UT, ResBiomass_ABS, ResPhenologyEmergence_UT, ResPhenologyEmergence_ABS)
-save(ParameterEstimate, file = "ParameterEstimate.Rdata")
 
 ParameterEstimatePlot <- ParameterEstimate %>% 
   filter(Variable != c("(Intercept)")) %>% 
