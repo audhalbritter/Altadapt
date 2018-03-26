@@ -56,7 +56,6 @@ vignettes/*.pdf
 
 
 # exclude folders
-**/Actual code used
 **/Old code
 **/Preliminary Analysis
 **/Analysis several models
