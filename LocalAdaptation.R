@@ -154,7 +154,7 @@ resBioBreed <- res1 %>%
   mutate(CI.high = Estimate + 1.96 * StError) %>% 
   mutate(Estimate = round(Estimate, 2), CI = paste(round(CI.low, 2), round(CI.high, 2), sep = " - "), Zvalue = round(Zvalue, 2), Pvalue = round(Pvalue, 3)) %>% 
   select(Variable, Estimate, CI, Zvalue, Pvalue) %>% 
-  mutate(Variable = plyr::mapvalues(Variable, c("(Intercept)", "sympforeign site", "breedmixed_mating", "breedoutcrossing", "breedmixed_mating:sympforeign site", "breedoutcrossing:sympforeign site"), c("Intercept", "OF", "BS - mixed mating", "BS - outcrossing", "OF*BS - mixed mating", "OF*BS - ourcrossing")))
+  mutate(Variable = plyr::mapvalues(Variable, c("(Intercept)", "symphome site", "breedmixed_mating", "breedoutcrossing", "breedmixed_mating:symphome site", "breedoutcrossing:symphome site"), c("Intercept", "OF", "BS - mixed mating", "BS - outcrossing", "OF*BS - mixed mating", "OF*BS - ourcrossing")))
 
 
 Fit <- fitness %>% filter(!is.na(breed))
@@ -169,7 +169,7 @@ resFitBreed <- res2 %>%
   mutate(CI.high = Estimate + 1.96 * StError) %>% 
   mutate(Estimate = round(Estimate, 2), CI = paste(round(CI.low, 2), round(CI.high, 2), sep = " - "), Zvalue = round(Zvalue, 2), Pvalue = round(Pvalue, 3)) %>% 
   select(Variable, Estimate, CI, Zvalue, Pvalue) %>% 
-  mutate(Variable = plyr::mapvalues(Variable, c("(Intercept)", "sympforeign site", "breedmixed_mating", "breedoutcrossing", "breedmixed_mating:sympforeign site", "breedoutcrossing:sympforeign site"), c("Intercept", "OF", "BS - mixed mating", "BS - outcrossing", "OF*BS - mixed mating", "OF*BS - ourcrossing")))
+  mutate(Variable = plyr::mapvalues(Variable, c("(Intercept)", "symphome site", "breedmixed_mating", "breedoutcrossing", "breedmixed_mating:symphome site", "breedoutcrossing:symphome site"), c("Intercept", "OF", "BS - mixed mating", "BS - outcrossing", "OF*BS - mixed mating", "OF*BS - ourcrossing")))
 
 
 Sur <- survival %>% filter(!is.na(breed))
@@ -184,7 +184,7 @@ resSurBreed <- res3 %>%
   mutate(CI.high = Estimate + 1.96 * StError) %>% 
   mutate(Estimate = round(Estimate, 2), CI = paste(round(CI.low, 2), round(CI.high, 2), sep = " - "), Zvalue = round(Zvalue, 2), Pvalue = round(Pvalue, 3)) %>% 
   select(Variable, Estimate, CI, Zvalue, Pvalue) %>% 
-  mutate(Variable = plyr::mapvalues(Variable, c("(Intercept)", "sympforeign site", "breedmixed_mating", "breedmixed_mating:sympforeign site"), c("Intercept", "OF", "BS - mixed mating", "OF*BS - mixed mating")))
+  mutate(Variable = plyr::mapvalues(Variable, c("(Intercept)", "symphome site", "breedmixed_mating", "breedmixed_mating:symphome site"), c("Intercept", "OF", "BS - mixed mating", "OF*BS - mixed mating")))
 
 
 # GROWTHFORM
@@ -200,7 +200,7 @@ resBioGrowth <- res4 %>%
   mutate(CI.high = Estimate + 1.96 * StError) %>% 
   mutate(Estimate = round(Estimate, 2), CI = paste(round(CI.low, 2), round(CI.high, 2), sep = " - "), Zvalue = round(Zvalue, 2), Pvalue = round(Pvalue, 3)) %>% 
   select(Variable, Estimate, CI, Zvalue, Pvalue) %>% 
-  mutate(Variable = plyr::mapvalues(Variable, c("(Intercept)", "sympforeign site", "growthformgrass", "growthformmoss", "growthformtree", "growthformgrass:sympforeign site", "growthformmoss:sympforeign site", "growthformtree:sympforeign site"), c("Intercept", "OF", "GF - grass", "GF - moss", "GF - tree", "OF*GF - grass", "OF*GF - moss", "OF*GF - tree")))
+  mutate(Variable = plyr::mapvalues(Variable, c("(Intercept)", "symphome site", "growthformgrass", "growthformmoss", "growthformtree", "growthformgrass:symphome site", "growthformmoss:symphome site", "growthformtree:symphome site"), c("Intercept", "OF", "GF - grass", "GF - moss", "GF - tree", "OF*GF - grass", "OF*GF - moss", "OF*GF - tree")))
 
 
 Fit <- fitness %>% filter(!is.na(growthform))
@@ -215,7 +215,7 @@ resFitGrowth <- res5 %>%
   mutate(CI.high = Estimate + 1.96 * StError) %>% 
   mutate(Estimate = round(Estimate, 2), CI = paste(round(CI.low, 2), round(CI.high, 2), sep = " - "), Zvalue = round(Zvalue, 2), Pvalue = round(Pvalue, 3)) %>% 
   select(Variable, Estimate, CI, Zvalue, Pvalue) %>% 
-  mutate(Variable = plyr::mapvalues(Variable, c("(Intercept)", "sympforeign site", "growthformgrass", "growthformgrass:sympforeign site"), c("Intercept", "OF", "GF - grass", "OF*GF - grass")))
+  mutate(Variable = plyr::mapvalues(Variable, c("(Intercept)", "symphome site", "growthformgrass", "growthformgrass:symphome site"), c("Intercept", "OF", "GF - grass", "OF*GF - grass")))
 
 
 Sur <- survival %>% filter(!is.na(growthform))
@@ -230,7 +230,7 @@ resSurGrowth <- res5 %>%
   mutate(CI.high = Estimate + 1.96 * StError) %>% 
   mutate(Estimate = round(Estimate, 2), CI = paste(round(CI.low, 2), round(CI.high, 2), sep = " - "), Zvalue = round(Zvalue, 2), Pvalue = round(Pvalue, 3)) %>% 
   select(Variable, Estimate, CI, Zvalue, Pvalue) %>% 
-  mutate(Variable = plyr::mapvalues(Variable, c("(Intercept)", "sympforeign site", "growthformforb", "growthformgrass", "growthformforb:sympforeign site", "growthformgrass:sympforeign site"), c("Intercept", "OF", "GF - forb", "GF - grass", "OF*GF - forb", "OF*GF - grass")))
+  mutate(Variable = plyr::mapvalues(Variable, c("(Intercept)", "symphome site", "growthformforb", "growthformgrass", "growthformforb:symphome site", "growthformgrass:symphome site"), c("Intercept", "OF", "GF - forb", "GF - grass", "OF*GF - forb", "OF*GF - grass")))
 
 
 # LONGEVITY
@@ -246,7 +246,7 @@ resBioLong <- res6 %>%
   mutate(CI.high = Estimate + 1.96 * StError) %>% 
   mutate(Estimate = round(Estimate, 2), CI = paste(round(CI.low, 2), round(CI.high, 2), sep = " - "), Zvalue = round(Zvalue, 2), Pvalue = round(Pvalue, 3)) %>% 
   select(Variable, Estimate, CI, Zvalue, Pvalue) %>% 
-  mutate(Variable = plyr::mapvalues(Variable, c("(Intercept)", "sympforeign site", "longevityperennial", "longevityperennial:sympforeign site"), c("Intercept", "OF", "LO - perennial", "OF*LO - perennial")))
+  mutate(Variable = plyr::mapvalues(Variable, c("(Intercept)", "symphome site", "longevityperennial", "longevityperennial:symphome site"), c("Intercept", "OF", "LO - perennial", "OF*LO - perennial")))
 
 
 Fit <- fitness %>% filter(!is.na(longevity))
@@ -261,7 +261,7 @@ resFitLong <- res7 %>%
   mutate(CI.high = Estimate + 1.96 * StError) %>% 
   mutate(Estimate = round(Estimate, 2), CI = paste(round(CI.low, 2), round(CI.high, 2), sep = " - "), Zvalue = round(Zvalue, 2), Pvalue = round(Pvalue, 3)) %>% 
   select(Variable, Estimate, CI, Zvalue, Pvalue) %>% 
-  mutate(Variable = plyr::mapvalues(Variable, c("(Intercept)", "sympforeign site", "longevityperennial", "longevityperennial:sympforeign site"), c("Intercept", "OF", "LO - perennial", "OF*LO - perennial")))
+  mutate(Variable = plyr::mapvalues(Variable, c("(Intercept)", "symphome site", "longevityperennial", "longevityperennial:symphome site"), c("Intercept", "OF", "LO - perennial", "OF*LO - perennial")))
 
 
 Sur <- survival %>% filter(!is.na(longevity))
@@ -276,7 +276,7 @@ resSurLong <- res8 %>%
   mutate(CI.high = Estimate + 1.96 * StError) %>% 
   mutate(Estimate = round(Estimate, 2), CI = paste(round(CI.low, 2), round(CI.high, 2), sep = " - "), Zvalue = round(Zvalue, 2), Pvalue = round(Pvalue, 3)) %>% 
   select(Variable, Estimate, CI, Zvalue, Pvalue) %>% 
-  mutate(Variable = plyr::mapvalues(Variable, c("(Intercept)", "sympforeign site", "longevityperennial", "longevityperennial:sympforeign site"), c("Intercept", "OF", "LO - perennial", "OF*LO - perennial")))
+  mutate(Variable = plyr::mapvalues(Variable, c("(Intercept)", "symphome site", "longevityperennial", "longevityperennial:symphome site"), c("Intercept", "OF", "LO - perennial", "OF*LO - perennial")))
 
 
 
