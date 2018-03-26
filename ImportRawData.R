@@ -84,5 +84,7 @@ dat2 <- dat2 %>%
 head(dat2)
 length(unique(dat2$StudyID)) # 70
 
+dat2 <- dat2 %>% 
+  select(-X, -dist.dd, -breedingsystem)
+
 #write.csv(dat2, file = "FinalSharedData/TraitDifferentiation.csv")
-#save(dat2, file = "dat2.Rdata")
