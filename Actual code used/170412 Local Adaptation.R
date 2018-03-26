@@ -146,7 +146,7 @@ LA <- LA %>%
   
 
 LA <- LA %>% 
-  select(-SEQ, -data_type, -TRAIT_CAT1, -TRAIT_CAT2, -TRAIT_CAT3, -TRAIT_CAT4, -YearOfExp, -Data.entered.by, -EXCLUDE, -bio_1, -bio_2, -bio_3, -bio_4, -bio_5, -bio_6, -bio_7, -bio_8, -bio_9, -bio_10, -bio_11, -SEQ1, -extracted_by, -lead_author, -year, -journal, -studytype, -studysite, -no.sites, -no.traits, -Coord, -coor.var, -LATLONG_extr, -breedingsystem, -excluded, -why_exclude, -bio_1_site, -bio_2_site, -bio_3_site, -bio_4_site, -bio_5_site, -bio_6_site, -bio_7_site, -bio_8_site, -bio_9_site, -bio_10_site, -bio_11_site, -bio_12_site, -bio_13_site, -bio_14_site, -bio_15_site, -bio_16_site, -bio_17_site, -bio_18_site, -bio_19_site, -mean.elev, -r.elev, -mean.lat, -mean.long, -mean.temp, -r.temp, -mean.seasonality, -dist.dd, -dist.km, -mean.dist.km)
+  select(-SEQ, -data_type, -TRAIT_CAT1, -TRAIT_CAT2, -TRAIT_CAT3, -TRAIT_CAT4, -YearOfExp, -Data.entered.by, -EXCLUDE, -bio_1, -bio_2, -bio_3, -bio_4, -bio_5, -bio_6, -bio_7, -bio_8, -bio_9, -bio_10, -bio_11, -SEQ1, -extracted_by, -lead_author, -year, -journal, -studytype, -studysite, -no.sites, -no.traits, -Coord, -coor.var, -LATLONG_extr, -breedingsystem, -excluded, -why_exclude, -bio_1_site, -bio_2_site, -bio_3_site, -bio_4_site, -bio_5_site, -bio_6_site, -bio_7_site, -bio_8_site, -bio_9_site, -bio_10_site, -bio_11_site, -bio_12_site, -bio_13_site, -bio_14_site, -bio_15_site, -bio_16_site, -bio_17_site, -bio_18_site, -bio_19_site, -mean.elev, -r.elev, -mean.lat, -mean.long, -mean.temp, -mean.seasonality, -dist.dd, -dist.km, -mean.dist.km)
 
 write.csv(LA, file = "FinalSharedData/LocalAdaptation.csv")
 
