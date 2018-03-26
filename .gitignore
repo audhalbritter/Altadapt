@@ -36,6 +36,7 @@ vignettes/*.pdf
 *.dat
 *.RData.Tmp1
 *.docx
+*.txt
 # exceptions for files
 # !globalCorrections.csv 
 
