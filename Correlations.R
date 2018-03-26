@@ -6,6 +6,21 @@ library("lme4")
 library("broom")
 library("knitr")
 
+
+# subsetting data for height, biomass and phenology, create a variable var
+# create variables for absolute slope and latitude
+dat2 <- read.csv(file = "FinalSharedData/TraitDifferentiation.csv")
+
+dat4 <- dat2 %>% 
+  filter(TRAIT_CAT1 == "SIZE" & TRAIT_CAT2 == "HEIGHT" | TRAIT_CAT1 == "SIZE" & TRAIT_CAT2 == "BIOMASS" & TRAIT_CAT3 == "ABOVEGR" | TRAIT_CAT1 == "PHENOLOGY" & TRAIT_CAT2 %in% c("FLOWERING", "LEAF_BUD") & TRAIT_CAT4 == c("first", "peak")) %>%
+  mutate(var = ifelse(TRAIT_CAT1 == "SIZE" & TRAIT_CAT2 == "HEIGHT", "height",
+                      ifelse(TRAIT_CAT1 == "SIZE" & TRAIT_CAT2 == "BIOMASS" & TRAIT_CAT3 == "ABOVEGR", "biomass", "phenology"))) %>% 
+  rename(slopes = estimate, sample.size = n) %>% 
+  mutate(abs.slopes = abs(slopes)) %>% 
+  mutate(abs.lat = abs(mean.lat))
+
+
+
 ### CORRELATIONS AMONG CONTINOUS VARIABLES
 dat4 %>% select(abs.lat, mean.temp, mean.seasonality, dist.km) %>% ggpairs()
 ### absolute latitude is highly correlated with mean.temp and mean.seasonality
